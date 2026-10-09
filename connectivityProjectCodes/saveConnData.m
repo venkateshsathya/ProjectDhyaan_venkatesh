@@ -1,24 +1,32 @@
 
-function saveConnData(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange)
+function saveConnData(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange, connDataFolder)
 
 if ~exist('stRange','var');         stRange = [0.25 1.25];              end
 
 numProtocols = length(protocolNameList);
 for i=1:numProtocols
     protocolName = protocolNameList{i};
-    saveConnDataSingleProtocol(subjectName,protocolName,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange);
+    saveConnDataSingleProtocol(subjectName,protocolName,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange,connDataFolder);
 end
 end
 
-function saveConnDataSingleProtocol(subjectName,protocolName,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange)
+function saveConnDataSingleProtocol(subjectName,protocolName,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange,connDataFolder)
 
-savedDataFolder = 'savedData'; % local project directory
-makeDirectory(savedDataFolder);
-savedDataFolder = fullfile(savedDataFolder,subjectName);
-makeDirectory(savedDataFolder);
+%connDataFolder = 'savedData'; % local project directory
+%makeDirectory(connDataFolder);
+
+
+[success, message] = mkdir(connDataFolder);
+if ~success
+    error('Could not create folder: %s', message);
+end
+
+disp(connDataFolder);
+connDataFolder = fullfile(connDataFolder,subjectName);
+makeDirectory(connDataFolder);
 
 % Analysis file - this is where the final analyzed data is saved
-analysisDetailsFileConn = fullfile(savedDataFolder,[protocolName '_' badEyeCondition '_' badTrialVersion '_' connMethod '.mat']);
+analysisDetailsFileConn = fullfile(connDataFolder,[protocolName '_' badEyeCondition '_' badTrialVersion '_' connMethod '.mat']);
 
 % ftData - data in fieldtrip format is saved in ftData
 ftDataFileName = fullfile(ftDataFolder,subjectName,[protocolName '_' badEyeCondition '_' badTrialVersion '.mat']);
@@ -30,12 +38,21 @@ if numGoodTrials>0
 
     cfg        = [];
     cfg.toilim = [(-diff(stRange) + 1/data.fsample) 0]; % just to have data of same length in Pre, Post
-    dataPre   = ft_redefinetrial(cfg,data);
+
+
+    dataForFT_NoTimevals = data;
+    % if isfield(dataForFT_NoTimevals, 'timeVals')
+    %     dataForFT_NoTimevals = rmfield(dataForFT_NoTimevals, 'timeVals');
+    % end
+
+    dataPre = ft_redefinetrial(cfg, dataForFT_NoTimevals);
+
+    %dataPre   = ft_redefinetrial(cfg,data);
     
     cfg        = [];
     cfg.toilim = [(stRange(1) + 1/data.fsample) stRange(2)];
-    dataPost   = ft_redefinetrial(cfg,data);
-
+    dataPost   = ft_redefinetrial(cfg,dataForFT_NoTimevals);
+    
     [connPre,freqPre] = getConnIndividualSubject(dataPre,connMethod);
     [connPost,freqPost] = getConnIndividualSubject(dataPost,connMethod);
 else

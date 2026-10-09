@@ -9,9 +9,9 @@ if ~exist('omitFreqFlag', 'var');           omitFreqFlag = 0;           end
 if ~exist('omitFreqRange', 'var');          omitFreqRange = [47 53];    end
 
 if useMedianFlag
-    getLoc = @(g)(squeeze(median(g,1)));
+    getLoc = @(g)(squeeze(median(g,1,'omitnan')));
 else
-    getLoc = @(g)(squeeze(mean(g,1)));
+    getLoc = @(g)(squeeze(mean(g,1,'omitnan')));
 end
 
 numGroups = length(data);
@@ -34,7 +34,7 @@ for i = 1:numGroups
         bootStat = bootstrp(1000, getLoc, data{i});
         sData = std(bootStat, 0, 1, "omitnan");
     else
-        sData = std(data{i}, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data{i}(:,1))));
+        sData = std(data{i}, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data{i}),1));
     end
 
     % updating the indices as per omitFreqFlag

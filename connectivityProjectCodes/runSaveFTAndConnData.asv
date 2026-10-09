@@ -40,7 +40,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Save Connectivity data %%%%%%%%%%%%%%%%%%%%%%%%%%%
 connMethod = 'granger';
-
+fla
 stRange = [0.25 1.25];
 saveConnDataFlag=1;
 if saveConnDataFlag
@@ -49,9 +49,8 @@ if saveConnDataFlag
         disp(['Analyzing for subject ' subjectName]);
         expDate = expDateList{strcmp(subjectName,allSubjectNames)};
         pre_datetime = datetime;
-        fprintf("FC %s", connMethod, " bivariate")
         saveConnDataGoodChannels_bivariateGranger(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange, connDataFolder);
-        
+        fprintf("FC ", connMethod, " bivariate")
         post_datetime = datetime;
         dt = post_datetime - pre_datetime;
         fprintf('Time taken: %d minutes and %.2f seconds\n', ...

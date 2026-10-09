@@ -22,8 +22,8 @@ if ~exist('freqRangeList','var')
 end
 if ~exist('axisRangeList','var')
     axisRangeList{1} = [0 80];
-    axisRangeList{2} = [NaN NaN];
-    axisRangeList{3} = [NaN NaN];
+    axisRangeList{2} = [0 1];
+    axisRangeList{3} = [0 1];
 end
 if ~exist('cutoffList','var')
     cutoffList = [2 30];
@@ -55,43 +55,35 @@ titleStr{3} = 'Med - Con';
 
 freqLims = axisRangeList{1};
 yLims = axisRangeList{2};
-cLimsTopo = axisRangeList{3};
+% cLimsTopo = axisRangeList{3};
 capType = 'actiCap64_UOL';
 
 % FC PPC from NeoLabData
-saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';%'savedData';
+% saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';%'savedData';
 % Granger FC data - multivariate non-conditional, using
 % saveConnDataGoodChannels where only good channels are input to granger
 saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
     if isempty(hAllPlots)
-        electrodeGroupList = getElectrodeGroupsConn(groupType,1,capType);
+        electrodeGroupList = getElectrodeGroupsConn(groupType,1);
         numGroups = length(electrodeGroupList);
         hAllPlots.hConn1 = getPlotHandles(1,numGroups,[0.05 0.55 0.6 0.3],0.01,0.01,1);
         hAllPlots.hConn2 = getPlotHandles(numFreqRanges,numGroups,[0.05 0.05 0.6 0.45],0.01,0.01,0);
         hAllPlots.hTopoRef = getPlotHandles(1,2,[0.66 0.55 0.32 0.3],0.002,0.002,1);
         hAllPlots.hTopo  = getPlotHandles(numFreqRanges,3,[0.66 0.05 0.2 0.45],0,0,1);
         hAllPlots.hConn3 = getPlotHandles(numFreqRanges,1,[0.88 0.05 0.1 0.45],0.01,0.01,1);
+    else
+        hConn1 = hAllPlots.hConn1;
+        hConn2 = hAllPlots.hConn2;
+        hTopoRef = hAllPlots.hTopoRef;
+        hTopo = hAllPlots.hTopo;
+        hConn3  = hAllPlots.hConn3;
     end
-    hConn1 = hAllPlots.hConn1;
-    hConn2 = hAllPlots.hConn2;
-    hTopoRef = hAllPlots.hTopoRef;
-    hTopo = hAllPlots.hTopo;
-    hConn3  = hAllPlots.hConn3;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [connData,freqVals,connDataElectrodeGroup,electrodeGroupList,groupNameList, binnedCenters] = getConnDataAllSubjects(subjectNameLists,refElectrodes,groupType,connMethod,badEyeCondition,badTrialVersion,protocolName,analysisChoice,cutoffList,pairedDataFlag,saveFolderName,capType);
-
-% Automatic limits include negative GC and values above one.
-if any(isnan(freqLims)), freqLims=[min(freqVals) max(freqVals)]; end
-if any(isnan(yLims))
-    y=[connDataElectrodeGroup{1}(:); connDataElectrodeGroup{2}(:)];
-    y=y(isfinite(y));
-    yLims=[min(y) max(y)];
-    yLims=yLims+[-1 1]*0.05*max([diff(yLims) abs(yLims) 1]);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Show Electrodes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
@@ -127,7 +119,7 @@ for i=1:numElectrodeGroups
         title(groupNameList{i}, 'color', electrodeGroupColorList(i,:));
         xlim(hConn1(i),freqLims);
         if i==1
-            ylabel(hConn1(i),connMethod); xlabel('Frequency (Hz)', 'FontSize',9); xticks([0 20 40 60 80]); xticklabels([0 20 40 60 80]);
+            ylabel('PPC'); xlabel('Frequency (Hz)', 'FontSize',9); xticks([0 20 40 60 80]); xticklabels([0 20 40 60 80]);
         end
         if i==numElectrodeGroups
             for j=1:2
@@ -207,7 +199,6 @@ for i=1:numFreqRanges
             axes(hTopo(i,j)); %#ok<*LAXES>
             topoplot(zeros(1,64),montageChanlocs,'electrodes','on','plotrad',0.6,'headrad',0.6, 'maplimits', [0 1], 'emarker2', {refElectrodes , 'o', 'g', 4, 1}); hold on;
             topoplot(data{j}, montageChanlocs,'electrodes','on', 'plotrad',0.6,'headrad',0.6);
-            if all(isfinite(cLimsTopo)), clim(hTopo(i,j),cLimsTopo); end
             if i==3
                 cbar = colorbar(gca, 'eastoutside');
                 cbar.Position = [cbar.Position(1) + 0.015, cbar.Position(2), cbar.Position(3), cbar.Position(4)];
@@ -235,7 +226,7 @@ for i=1:numFreqRanges
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [connData,freqVals,connDataElectrodeGroup,electrodeGroupList,groupNameList,binnedCenters] = getConnDataAllSubjects(subjectNameLists,refElectrodes,groupType,connMethod,badEyeCondition,badTrialVersion,protocolName,analysisChoice,cutoffList,pairedDataFlag,saveFolderName,capType)
+function [connData,freqVals,connDataElectrodeGroup,electrodeGroupList,groupNameList,binnedCenters] = getConnDataAllSubjects(subjectNameLists,refElectrodes,refElectrodes,connMethod,badEyeCondition,badTrialVersion,protocolName,analysisChoice,cutoffList,pairedDataFlag,saveFolderName,capType)
 
 [electrodeGroupList,groupNameList,binnedCenters] = getElectrodeGroupsConn(groupType,refElectrodes,capType);
 

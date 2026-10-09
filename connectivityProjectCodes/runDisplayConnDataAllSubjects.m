@@ -6,6 +6,7 @@ if ~exist('groupType','var');       groupType='rel';                    end
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
 backgroundColor = 'w'; panelHeight = 0.125;
+figure('Color','w','Name','FC across subjects','NumberTitle','off');
 colormap jet
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Subject Choices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,8 +89,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%% Axis Ranges %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hPanel5 = uipanel('Title','Axis Ranges','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.625 1-panelHeight 0.15 panelHeight]);
 axisRangeList0{1} = [0 97]; axisRangeName{1} = 'Freq Lims (Hz)';
-axisRangeList0{2} = [0 1]; axisRangeName{2} = 'YLims';
-axisRangeList0{3} = [0 1]; axisRangeName{3} = 'cLims (topo)';
+axisRangeList0{2} = [NaN NaN]; axisRangeName{2} = 'YLims'; % NaN displays as 'auto'.
+axisRangeList0{3} = [NaN NaN]; axisRangeName{3} = 'cLims (topo)';
 
 numAxisRanges = length(axisRangeList0);
 hAxisRangeMin = cell(1,numAxisRanges);
@@ -98,9 +99,9 @@ hAxisRangeMax = cell(1,numAxisRanges);
 for i=1:numAxisRanges
     uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0 1-i/numAxisRanges 0.5 1/numAxisRanges],'Style','text','String',axisRangeName{i},'FontSize',fontSizeSmall);
     hAxisRangeMin{i} = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 1-i/numAxisRanges 0.25 1/numAxisRanges], ...
-        'Style','edit','String',num2str(axisRangeList0{i}(1)),'FontSize',fontSizeSmall);
+        'Style','edit','String',strrep(num2str(axisRangeList0{i}(1)),'NaN','auto'),'FontSize',fontSizeSmall);
     hAxisRangeMax{i} = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 1-i/numAxisRanges 0.25 1/numAxisRanges], ...
-        'Style','edit','String',num2str(axisRangeList0{i}(2)),'FontSize',fontSizeSmall);
+        'Style','edit','String',strrep(num2str(axisRangeList0{i}(2)),'NaN','auto'),'FontSize',fontSizeSmall);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%% Cutoff Choices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,7 +136,7 @@ hAllPlots.hTopoRef = getPlotHandles(1,2,[0.62 0.55 0.37 0.3],0.002,0.002,1);
 hAllPlots.hTopo  = getPlotHandles(numFreqRanges,3,[0.56 0.05 0.3 0.4],0.005,0.01,1);
 hAllPlots.hConn3 = getPlotHandles(numFreqRanges,1,[0.89 0.053 0.1 0.4],0.01,0.01,1);
 
-connMethod = 'ppc';
+connMethod = 'granger';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function plot_Callback(~,~)
@@ -229,28 +230,12 @@ connMethod = 'ppc';
         end
     end
     function rescale_Callback(~,~)
-        axisLims = [str2double(get(hAxisRangeMin{1},'String')) str2double(get(hAxisRangeMax{1},'String')) str2double(get(hAxisRangeMin{2},'String')) str2double(get(hAxisRangeMax{2},'String'))];
+        fLims = [str2double(get(hAxisRangeMin{1},'String')) str2double(get(hAxisRangeMax{1},'String'))];
+        yLims = [str2double(get(hAxisRangeMin{2},'String')) str2double(get(hAxisRangeMax{2},'String'))];
         cLims = [str2double(get(hAxisRangeMin{3},'String')) str2double(get(hAxisRangeMax{3},'String'))];
-
-        rescaleGivenPlotHandle(hAllPlots.hConn1,axisLims);
-        rescaleZGivenPlotHandle(hAllPlots.hTopo,cLims);
-
-        function rescaleGivenPlotHandle(plotHandles,axisLims)
-            [numRows,numCols] = size(plotHandles);
-            for ii=1:numRows
-                for j=1:numCols
-                    axis(plotHandles(ii,j),axisLims);
-                end
-            end
-        end
-        function rescaleZGivenPlotHandle(plotHandles,cLims)
-            [numRows,numCols] = size(plotHandles);
-            for ii=1:numRows
-                for j=1:numCols
-                    clim(plotHandles(ii,j),cLims);
-                end
-            end
-        end
+        yAxes = [hAllPlots.hConn1(:); hAllPlots.hConn2(:); hAllPlots.hConn3(:)];
+        if any(isnan(fLims)), set(hAllPlots.hConn1(:),'XLimMode','auto'); else, set(hAllPlots.hConn1(:),'XLim',fLims); end
+        if any(isnan(yLims)), set(yAxes,'YLimMode','auto'); else, set(yAxes,'YLim',yLims); end
+        if any(isnan(cLims)), set(hAllPlots.hTopo(:),'CLimMode','auto'); else, set(hAllPlots.hTopo(:),'CLim',cLims); end
     end
-
 end
