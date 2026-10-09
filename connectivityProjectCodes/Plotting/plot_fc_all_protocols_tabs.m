@@ -1,8 +1,9 @@
 % One figure, one tab per protocol, four occipital seed spectra.
 plot_FC = 'granger'; % 'granger' or 'ppc'
-[subjects,dates,groups,ages,genders,education,mc] = getDemographicDetails('BK1'); idx = strcmp(subjects,subject);
+[subjects,dates,groups,ages,genders,education,mc] = getDemographicDetails('BK1'); 
+subject = '035SS';%'012GK';%'040VS';%'096MS';%'019CKa';
+idx = strcmp(subjects,subject);
 
-subject = '054MP';%'012GK';%'040VS';%'096MS';%'019CKa';
 
 disp(table(subjects(idx),groups(idx),ages(idx),genders(idx),education(idx),dates(idx),mc(idx),'VariableNames',{'Subject','Group','Age','Gender','EducationYears','ExperimentDate','MenstrualCycle'}));
 protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};

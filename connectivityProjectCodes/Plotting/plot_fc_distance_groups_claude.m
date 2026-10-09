@@ -1,11 +1,12 @@
 % Six distance bins in a 3-by-2 grid, with all four seeds and Combined overlaid.
+% GOOD-SUBJECTS VERSION of plot_fc_distance_groups.m: subjects whose saved file is
+% missing or empty (numGoodTrials==0, empty connPre/connPost) are skipped and
+% reported in the Command Window, instead of crashing the script.
 % Edit these inputs, then run this script with the MATLAB Run button.
-% folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
-folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
-
-protocol = 'EO1';          % EO1, EC1, G1, M1, G2, EO2, EC2, or M2.
+folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
+protocol = 'EO2';          % EO1, EC1, G1, M1, G2, EO2, EC2, or M2.
 subjectGroup = 'meditation'; % 'meditation', 'control', or 'combined'.
-epochChoice = 'combined';  % 'pre', 'post', or 'combined'.
+epochChoice = 'post';  % 'pre', 'post', or 'combined'.
 
 % DATA AND SUBJECT SELECTION
 % Saved matrices are C(source,target,frequency), in actiCap64_UOL order.
@@ -13,7 +14,9 @@ epochChoice = 'combined';  % 'pre', 'post', or 'combined'.
 % Thus C(seed,j,f) is outgoing directed GC from the seed to target j.
 % No symmetrization, absolute value, or restriction to [0,1] is applied.
 % getGoodSubjectsBK1 removes the project's declared bad subjects.
-% Only selected subjects with saved files in folder are used; names are in R.
+% Only selected subjects with saved, non-empty files in folder are used.
+% Subjects that are selected but skipped are listed in R.skipped
+% (name + reason) and printed to the Command Window.
 % Saved NaNs remove bad electrodes. Self-connections are also excluded.
 % No additional trial-count cutoff or negative-value rejection is applied.
 % The project's information files and montage must be on the MATLAB path.
@@ -45,9 +48,11 @@ epochChoice = 'combined';  % 'pre', 'post', or 'combined'.
 % Combined seeds use the available seeds for each subject/bin/frequency.
 %
 % RESULTS LEFT IN THE WORKSPACE (F=201 for the inspected saved files)
-% R.subjectFC         : Nsubjects-by-5-by-6-by-F.
+% R.subjectFC         : Nsubjects-by-5-by-6-by-F (only subjects actually used).
 % R.meanFC            : 5-by-6-by-F (the plotted population means Y).
 % R.validSubjectCounts: 5-by-6-by-F (the denominators |U|).
+% R.subjectNames      : names matching the rows of R.subjectFC.
+% R.skipped           : Nskipped-by-2 cell, {subjectName, reason}.
 % Seed order: Oz, O2, POz, O1, Combined. Bin order: near to far.
 % R.electrodeGroups   : 4-by-6 cell array of target-electrode indices.
 % R.freq              : 1-by-F; R.binCenters: 1-by-6.
@@ -77,29 +82,77 @@ for s = 1:numel(files)
 end
 [subjectNames,~,inputIndex] = intersect(selectedSubjects,availableSubjects,'stable');
 
+% Selected subjects with no saved file for this protocol (e.g. never processed,
+% or failed in the saving step). They are recorded as skipped.
+skipped = cell(0,2);
+missingFile = setdiff(selectedSubjects(:),availableSubjects(:),'stable');
+for s = 1:numel(missingFile)
+    skipped(end+1,:) = {missingFile{s},'no saved file in folder for this protocol'}; %#ok<SAGROW>
+end
+
 % Epoch mean -> distance-group target mean -> within-subject seed mean.
 subjectFC = []; freq = []; % Start fresh on each script run.
+isUsed = false(numel(subjectNames),1);
 for s = 1:numel(subjectNames)
     S = load(fullfile(files(inputIndex(s)).folder,files(inputIndex(s)).name));
-    display(subjectNames{s})
-    switch lower(epochChoice)
-        case 'pre', C = S.connPre; freq = S.freqPre;
-        case 'post', C = S.connPost; freq = S.freqPost;
-        case 'combined', C = (S.connPre + S.connPost)/2; freq = S.freqPost;
+
+    % Skip subjects with no usable data (numGoodTrials==0 saves empty arrays).
+    if S.numGoodTrials == 0 || isempty(S.connPre) || isempty(S.connPost)
+        skipped(end+1,:) = {subjectNames{s},'saved file has no data (numGoodTrials==0 or empty conn)'}; %#ok<SAGROW>
+        continue
     end
-    if s == 1, subjectFC = nan(numel(subjectNames),5,6,numel(freq)); end
+
+    switch lower(epochChoice)
+        case 'pre', C = S.connPre; thisFreq = S.freqPre;
+        case 'post', C = S.connPost; thisFreq = S.freqPost;
+        case 'combined', C = (S.connPre + S.connPost)/2; thisFreq = S.freqPost;
+    end
+
+    % Allocate on the first VALID subject, using its frequency grid.
+    if isempty(subjectFC)
+        freq = thisFreq;
+        subjectFC = nan(numel(subjectNames),5,6,numel(freq));
+    elseif numel(thisFreq) ~= numel(freq) || any(abs(thisFreq(:)-freq(:)) > 1e-9)
+        skipped(end+1,:) = {subjectNames{s},'frequency grid differs from the first subject'}; %#ok<SAGROW>
+        continue
+    end
+
     for r = 1:4
         for b = 1:6
             subjectFC(s,r,b,:) = reshape(mean(C(seeds(r),electrodeGroups{r,b},:),2,'omitnan'),1,1,1,[]);
         end
     end
     subjectFC(s,5,:,:) = mean(subjectFC(s,1:4,:,:),2,'omitnan');
+
+    % Skip subjects where every seed is bad, so no value exists to average.
+    if all(isnan(subjectFC(s,:,:,:)),'all')
+        subjectFC(s,:,:,:) = NaN;
+        skipped(end+1,:) = {subjectNames{s},'all seed electrodes/targets are NaN (bad electrodes)'}; %#ok<SAGROW>
+        continue
+    end
+    isUsed(s) = true;
+end
+
+if isempty(subjectFC) || ~any(isUsed)
+    error('No subjects with usable data for protocol %s, group %s.',protocol,subjectGroup);
+end
+
+% Keep only subjects actually used, so names and rows stay aligned.
+subjectFC = subjectFC(isUsed,:,:,:);
+subjectNames = subjectNames(isUsed);
+
+% Report what was dropped.
+fprintf('%s | %s | %s: %d of %d selected subjects used.\n', ...
+    protocol,subjectGroup,epochChoice,numel(subjectNames),numel(selectedSubjects));
+for s = 1:size(skipped,1)
+    fprintf('  SKIPPED %s: %s\n',skipped{s,1},skipped{s,2});
 end
 
 % Subject mean is the LAST averaging step, preserving equal subject weights.
 R = struct;
 R.protocol = protocol; R.subjectGroup = subjectGroup; R.epochChoice = epochChoice;
 R.subjectNames = subjectNames; R.subjectFC = subjectFC; R.freq = freq(:).';
+R.skipped = skipped;
 R.meanFC = reshape(mean(subjectFC,1,'omitnan'),5,6,[]);
 R.validSubjectCounts = reshape(sum(~isnan(subjectFC),1),5,6,[]);
 R.seedNames = seedNames; R.seedIndices = seeds;
@@ -119,6 +172,6 @@ for b = 1:6
     legend(ax(b),seedNames,'Location','best');
 end
 linkaxes(ax,'xy');
-sgtitle(sprintf('%s | %s | %s | N=%d (meditation=%d, control=%d)', ...
-    char(protocol),char(subjectGroup),char(epochChoice),numel(subjectNames), ...
+sgtitle(sprintf('%s | %s | %s | N=%d used of %d (meditation=%d, control=%d)', ...
+    char(protocol),char(subjectGroup),char(epochChoice),numel(subjectNames),numel(selectedSubjects), ...
     sum(ismember(subjectNames,meditationSubjects)),sum(ismember(subjectNames,controlSubjects))));
