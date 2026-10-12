@@ -59,10 +59,14 @@ cLimsTopo = axisRangeList{3};
 capType = 'actiCap64_UOL';
 
 % FC PPC from NeoLabData
-saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';%'savedData';
+%saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';%'savedData';
 % Granger FC data - multivariate non-conditional, using
 % saveConnDataGoodChannels where only good channels are input to granger
-saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
+%saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
+% Granger FC data - bivariate, pairwise across all electrodes
+% non-conditional using saveConnDataGoodChannels_bivariateGranger.m file.
+saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
     if isempty(hAllPlots)

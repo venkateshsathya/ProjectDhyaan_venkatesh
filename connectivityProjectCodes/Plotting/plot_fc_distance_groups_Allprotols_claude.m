@@ -3,10 +3,10 @@
 % Edit these inputs, then run this script with the MATLAB Run button.
 
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
-folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
+% folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
 
-protocols = {'EO1'};%{'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
-epochChoice = 'combined';  % 'pre', 'post', or 'combined'.
+protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
+epochChoice = 'post';  % 'pre', 'post', or 'combined'.
 
 % PLOT MODES (a cell array; one new figure per entry, in the order given).
 %   'meditation'  -> mean over meditation subjects
@@ -17,7 +17,7 @@ epochChoice = 'combined';  % 'pre', 'post', or 'combined'.
 % Also accepted: 'controls', 'meditators', 'all'; case and spaces are ignored.
 % Examples: plot_modes = {'meditation','control'};
 %           plot_modes = {'meditation','control','combined','meditation-control'};
-plot_modes = {'control'};%{'meditation','control','combined','meditation-control'};
+plot_modes = {'meditation'};%{'meditation','control','combined','meditation-control'};
 
 % CALCULATION (same as plot_fc_distance_groups_claude.m, per protocol)
 % Per subject: epoch mean -> target mean per distance bin -> seed mean, giving
