@@ -1,7 +1,7 @@
 % One figure, one tab per protocol, four occipital seed spectra.
 plot_FC = 'granger'; % 'granger' or 'ppc'
 [subjects,dates,groups,ages,genders,education,mc] = getDemographicDetails('BK1'); 
-subject = '035SS';%'012GK';%'040VS';%'096MS';%'019CKa';
+subject = '019CKa';%'035SS';%'012GK';%'040VS';%'096MS';%'019CKa';
 idx = strcmp(subjects,subject);
 
 
@@ -11,7 +11,9 @@ if strcmp(plot_FC,'granger')
     % folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_17-43-56';
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
-
+    folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
+    folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-16_16-28-39';
+    FC_metric = 'granger_bivariate';
     yLabel = 'Mean outgoing Granger causality';
 else
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';
@@ -23,7 +25,7 @@ fig = figure('Color','w','Name',[subject ' | ' plot_FC],'NumberTitle','off');
 tabs = uitabgroup(fig);
 for p = 1:numel(protocols)
     protocol = protocols{p};
-    S = load(fullfile(folder,subject,[protocol '_ep_v8_' plot_FC '.mat']));
+    S = load(fullfile(folder,subject,[protocol '_ep_v8_' FC_metric '.mat']));
     C = (S.connPre + S.connPost)/2; % Same Pre/Post averaging as original script.
     freq = S.freqPost;
     for k = seeds

@@ -1,11 +1,15 @@
 % Run this script: one subject at a time in the same 2-by-2 figure.
 % Each seed panel overlays all protocols. FC is averaged over target electrodes.
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
+folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/Multivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/';
+folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
+folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';
+FC_metric = 'plv';
 protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
 epochChoice = 'combined'; % 'pre', 'post', or 'combined'.
 saveVideo = true;       % Set true to record while the figure updates.
 timestamp = char(datetime('now', 'Format', 'yyyy-MM-dd_HH-mm-ss'));
-videoFile = fullfile(fileparts(mfilename('fullpath')),['fc_subject_movie' timestamp '.avi']);
+videoFile = fullfile(folder,['fc_subject_movie' timestamp '.avi']);
 
 % Use good subjects with a folder here, or replace subjects with your own list.
 subjects = getGoodSubjectsBK1;
@@ -38,7 +42,7 @@ for s = 1:numel(subjects)
     % Load all protocols before drawing this subject's frame.
     FC = cell(1,numel(protocols)); freq = cell(1,numel(protocols));
     for p = 1:numel(protocols)
-        S = load(fullfile(folder,subjects{s},[protocols{p} '_ep_v8_granger.mat']));
+        S = load(fullfile(folder,subjects{s},[protocols{p} '_ep_v8_' FC_metric '.mat']));
         FC{p} = nan(4,0); % A zero-trial protocol has no curve.
         if S.numGoodTrials > 0
             switch epochChoice

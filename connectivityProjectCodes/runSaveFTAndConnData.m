@@ -20,7 +20,7 @@ ftDataFolder = fullfile(folderSourceString,'data','ftData'); % fieldtrip data is
 badEyeCondition = 'ep'; % use 'wo' when eye data is not used and 'ep' for eye position. Note that bad trials will be removed before saving in fieldtrip format
 badTrialVersion = 'v8';
 
-    
+
 %%%%%%%%%%%%%%%%%%%%%%%% Get data for all protocols %%%%%%%%%%%%%%%%%%%%%%%
 protocolNameList = [{'EO1'} {'EC1'} {'G1'} {'M1'} {'G2'} {'EO2'} {'EC2'} {'M2'}]; 
 
@@ -39,8 +39,19 @@ if saveFTDataFlag
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Save Connectivity data %%%%%%%%%%%%%%%%%%%%%%%%%%%
-connMethod = 'granger';
-
+% connMethod options: granger_bivariate, 'granger_multivariate','granger'
+connMethod = 'granger_bivariate';
+% global remove_bad_eletrod_flag
+add_params.remove_bad_eletrod_flag = true;
+% global foilim_max
+add_params.foilim_max = 200;
+% global linenoise_flag
+add_params.linenoise_flag = true;
+% global line_noise_freq 
+add_params.line_noise_freq = [50,100];
+% global ln_remove_method
+add_params.ln_remove_method = 'zero'; % Other methods are 'neighbour' or 'neighbour_fft'
+% fla
 stRange = [0.25 1.25];
 saveConnDataFlag=1;
 if saveConnDataFlag
@@ -49,9 +60,8 @@ if saveConnDataFlag
         disp(['Analyzing for subject ' subjectName]);
         expDate = expDateList{strcmp(subjectName,allSubjectNames)};
         pre_datetime = datetime;
-        fprintf("FC %s", connMethod, " bivariate")
-        saveConnDataGoodChannels_bivariateGranger(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange, connDataFolder);
-        
+        saveConnDataWithGrangerGoodChannelsDFT(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange, connDataFolder, add_params);
+        % fprintf("FC ", connMethod, " bivariate")
         post_datetime = datetime;
         dt = post_datetime - pre_datetime;
         fprintf('Time taken: %d minutes and %.2f seconds\n', ...

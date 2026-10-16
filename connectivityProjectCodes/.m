@@ -1,0 +1,60 @@
+% Save data in fieldtrip format
+
+% Mandatory fixed options
+%folderSourceString = '/mnt/NeoLabData/Projects/ProjectDhyaan/BK1/';%'N:\Projects\ProjectDhyaan\BK1';
+folderSourceString = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1';
+
+% Location where FC data are stored.
+parentFolder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1';
+
+timestamp = char(datetime('now', 'Format', 'yyyy-MM-dd_HH-mm-ss'));
+connDataFolder = fullfile(parentFolder, ['savedata_' timestamp]);
+% folderSourceString = 'D:\OneDrive - Indian Institute of Science\Supratim\Projects\ProjectDhyaan\BK1'; % Segmented data which is used for all analysis is kept at {folderSourceString}\data\segmentedData
+
+goodSubjectList = getGoodSubjectsBK1; % subjects for which data is computed
+[allSubjectNames,expDateList] = getDemographicDetails('BK1');
+
+ftDataFolder = fullfile(folderSourceString,'data','ftData'); % fieldtrip data is saved here
+%makeDirectory(ftDataFolder);
+
+badEyeCondition = 'ep'; % use 'wo' when eye data is not used and 'ep' for eye position. Note that bad trials will be removed before saving in fieldtrip format
+badTrialVersion = 'v8';
+
+    
+%%%%%%%%%%%%%%%%%%%%%%%% Get data for all protocols %%%%%%%%%%%%%%%%%%%%%%%
+protocolNameList = [{'EO1'} {'EC1'} {'G1'} {'M1'} {'G2'} {'EO2'} {'EC2'} {'M2'}]; 
+
+useTheseIndices = 1:length(goodSubjectList);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Save Fieldtrip data %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+saveFTDataFlag=0;
+if saveFTDataFlag
+    for i=1:length(useTheseIndices) %#ok<*UNRCH>
+        subjectName = goodSubjectList{useTheseIndices(i)};
+        disp(['Analyzing for subject ' subjectName]);
+        expDate = expDateList{strcmp(subjectName,allSubjectNames)};
+
+        saveFTData(subjectName,expDate,protocolNameList,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder);
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%% Save Connectivity data %%%%%%%%%%%%%%%%%%%%%%%%%%%
+connMethod = 'granger_bivariate';
+
+stRange = [0.25 1.25];
+saveConnDataFlag=1;
+if saveConnDataFlag
+    for i=1:length(useTheseIndices) %#ok<*UNRCH>
+        subjectName = goodSubjectList{useTheseIndices(i)};
+        disp(['Analyzing for subject ' subjectName]);
+        expDate = expDateList{strcmp(subjectName,allSubjectNames)};
+        pre_datetime = datetime;
+        % fprintf("FC %s", connMethod, " bivariate")
+        saveConnDataWithGranger(subjectName,protocolNameList,badEyeCondition,badTrialVersion,ftDataFolder,connMethod,stRange, connDataFolder);
+        
+        post_datetime = datetime;
+        dt = post_datetime - pre_datetime;
+        fprintf('Time taken: %d minutes and %.2f seconds\n', ...
+            floor(minutes(dt)), mod(seconds(dt),60));
+    end
+end 

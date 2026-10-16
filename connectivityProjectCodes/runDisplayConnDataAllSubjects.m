@@ -136,7 +136,7 @@ hAllPlots.hTopoRef = getPlotHandles(1,2,[0.62 0.55 0.37 0.3],0.002,0.002,1);
 hAllPlots.hTopo  = getPlotHandles(numFreqRanges,3,[0.56 0.05 0.3 0.4],0.005,0.01,1);
 hAllPlots.hConn3 = getPlotHandles(numFreqRanges,1,[0.89 0.053 0.1 0.4],0.01,0.01,1);
 
-connMethod = 'granger';
+connMethod = 'granger_bivariate';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function plot_Callback(~,~)

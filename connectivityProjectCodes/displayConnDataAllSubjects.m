@@ -66,7 +66,7 @@ capType = 'actiCap64_UOL';
 % Granger FC data - bivariate, pairwise across all electrodes
 % non-conditional using saveConnDataGoodChannels_bivariateGranger.m file.
 saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
-
+saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
     if isempty(hAllPlots)
