@@ -41,10 +41,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%% Save Connectivity data %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % connMethod options: 'granger_parametric', 'granger_bivariate', 'granger_multivariate', 'granger'
 connMethod = 'granger_parametric';
-% AR settings: order is illustrative and should be selected/validated for the data.
+% AR settings: order is illustrative and should be selected/validated for
+% the data.MVAR: multivariate autogressive
 add_params.mvar_order = 20;        % Samples: 20 ms at fs = 1000 Hz
 add_params.mvar_method = 'bsmart'; % 'bsmart' or 'biosig'
-add_params.mvar_algorithm = 2;     % BioSig only: 2 = Vieira-Morf, 1 = Yule-Walker
+add_params.mvar_algorithm = 1;     % BioSig only: 2 = Vieira-Morf, 1 = Yule-Walker
 add_params.mvar_demean = 'yes';    % Temporal mean removal; not average referencing
 % global remove_bad_eletrod_flag
 add_params.remove_bad_eletrod_flag = true;

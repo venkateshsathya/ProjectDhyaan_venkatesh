@@ -4,9 +4,11 @@ folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/Multivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/';
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';
-FC_metric = 'plv';
+folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_parametric_2026-10-16_20-59-30';
+FC_metric = 'granger_parametric';
+y_lim = 0.35;
 protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
-epochChoice = 'combined'; % 'pre', 'post', or 'combined'.
+epochChoice = 'post'; % 'pre', 'post', or 'combined'.
 saveVideo = true;       % Set true to record while the figure updates.
 timestamp = char(datetime('now', 'Format', 'yyyy-MM-dd_HH-mm-ss'));
 videoFile = fullfile(folder,['fc_subject_movie' timestamp '.avi']);
@@ -72,7 +74,8 @@ for s = 1:numel(subjects)
     % [sn,~,group,age,gender] = getDemographicDetails('BK1'); idx = strcmp(sn,subjects{s}); 
     idx = strcmp(sn,subjects{s});
     sgtitle(sprintf('%s | %s | Group: %s | Age: %g | Gender: %s | Meditation: %g hours',subjects{s},epochChoice,group{idx},age(idx),gender{idx},hours(idx)));
-    set(findall(fig,'Type','axes'),'YLim',[0 1.5]);
+    
+    set(findall(fig,'Type','axes'),'YLim',[0 y_lim]);
     drawnow;
     if saveVideo
         writeVideo(v,getframe(fig)); % Record the displayed frame in this same loop.

@@ -6,12 +6,11 @@ function saveConnDataWithGrangerGoodChannelsDFTParametric(subjectName,protocolNa
 % Select good electrodes before AR fitting, or after Fourier analysis for nonparametric GC.
 % Saved matrices keep the full channel order, with bad rows/columns set to NaN.
 % Subtract fitted 50/100 Hz sinusoids per trial/window before Fourier analysis.
-% The connMethod suffix distinguishes parametric results; save add_params with results.
+
 
 %Additional input parameters: add_params
 % Parametric settings: mvar_order, mvar_method (bsmart/biosig),
 % mvar_algorithm (BioSig only), mvar_demean (yes/no).
-% Fits a separate bivariate model for every pair, pooled across trials.
 
 if ~exist('stRange','var');         stRange = [0.25 1.25];              end
 % % foilim_max = data.fsample/2;
@@ -130,16 +129,16 @@ switch method
             cfg.channel = data.label(goodChannels);
             data = ft_selectdata(cfg, data);
         end
-        if numel(data.label)<2
-            error('Parametric Granger requires at least two selected electrodes.');
-        end
-        validateattributes(add_params.mvar_order, {'numeric'}, ...
-            {'scalar','integer','positive','finite'}, mfilename, 'add_params.mvar_order');
-        if any(cellfun(@(x) size(x,2), data.trial)<=add_params.mvar_order)
-            error('AR order must be smaller than the number of samples in every trial.');
-        end
-        validateattributes(add_params.foilim_max, {'numeric'}, ...
-            {'scalar','positive','finite','<=',data.fsample/2}, mfilename, 'add_params.foilim_max');
+        % if numel(data.label)<2
+        %     error('Parametric Granger requires at least two selected electrodes.');
+        % end
+        % validateattributes(add_params.mvar_order, {'numeric'}, ...
+        %     {'scalar','integer','positive','finite'}, mfilename, 'add_params.mvar_order');
+        % if any(cellfun(@(x) size(x,2), data.trial)<=add_params.mvar_order)
+        %     error('AR order must be smaller than the number of samples in every trial.');
+        % end
+        % validateattributes(add_params.foilim_max, {'numeric'}, ...
+        %     {'scalar','positive','finite','<=',data.fsample/2}, mfilename, 'add_params.foilim_max');
         cfg = [];
         cfg.method = add_params.mvar_method;
         cfg.order = add_params.mvar_order;
@@ -147,7 +146,7 @@ switch method
             cfg.mvarmethod = add_params.mvar_algorithm;
         end
         cfg.channelcmb = {'all','all'}; % Separate bivariate fits, not one joint model.
-        cfg.keeptrials = 'no';          % Pool trials while respecting trial boundaries.
+        cfg.keeptrials = 'no';          
         cfg.demean = add_params.mvar_demean;
         cfg.zscore = 'no';
         cfg.taper = 'rectwin';
