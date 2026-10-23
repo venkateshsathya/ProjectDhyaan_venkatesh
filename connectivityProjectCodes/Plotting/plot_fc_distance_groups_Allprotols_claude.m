@@ -6,12 +6,12 @@ folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK
 % folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-08_20-16-52';
 
 folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/';
-folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-16_16-28-39';
+folder = '/home/venkatesh/Documents/IISc/data/BivariateParametric_NotKeepTrials';
 % This data is including all 500HZ frequency content in the granger
 % computation, earlier ones included only upto 200 Hz.
 % folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
 protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
-FC_metric = 'granger_bivariate';
+FC_metric = 'granger_parametric';
 epochChoice = 'post';  % 'pre', 'post', or 'combined'.
 
 % PLOT MODES (a cell array; one new figure per entry, in the order given).

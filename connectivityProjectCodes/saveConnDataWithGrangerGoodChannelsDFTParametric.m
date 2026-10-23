@@ -147,6 +147,7 @@ switch method
         end
         cfg.channelcmb = {'all','all'}; % Separate bivariate fits, not one joint model.
         cfg.keeptrials = 'no';          
+        % cfg.jackknife  = 'yes';
         cfg.demean = add_params.mvar_demean;
         cfg.zscore = 'no';
         cfg.taper = 'rectwin';

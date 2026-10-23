@@ -67,6 +67,9 @@ capType = 'actiCap64_UOL';
 % non-conditional using saveConnDataGoodChannels_bivariateGranger.m file.
 saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-09_14-49-12';
 saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
+saveFolderName = '/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved';
+saveFolderName = '/run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th';
+% /run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
     if isempty(hAllPlots)

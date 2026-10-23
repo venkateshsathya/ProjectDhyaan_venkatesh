@@ -10,7 +10,7 @@ function saveConnDataWithGrangerGoodChannelsDFT(subjectName,protocolNameList,bad
 %Additional input parameters: add_params
 
 if ~exist('stRange','var');         stRange = [0.25 1.25];              end
-g
+global add_params
 % global add_params.remove_bad_eletrod_flag
 % global add_params.linenoise_flag
 % global foilim_max
@@ -115,6 +115,7 @@ conn(:,badElecs,:) = NaN;
 freqVals = temp.freq;
 end
 function [conn_stat,fieldtripMethod] = getConnThisCondition(data,method)
+global add_params
 % global remove_bad_eletrod_flag
 % global linenoise_flag
 % global foilim_max
@@ -127,6 +128,43 @@ if add_params.linenoise_flag
             data.fsample,add_params.line_noise_freq,'dftreplace',add_params.ln_remove_method);
     end
 end
+
+%%
+%%
+plot_PSD_lineremoval
+Fs = data.fsample;
+nTrials = numel(data.trial);
+
+% PSD of temp_data2 (64 x 1000)
+[Ptemp, f] = periodogram(temp_data2', [], [], Fs);
+Ptemp_avg = mean(Ptemp, 2);
+
+% PSD averaged across all trials and electrodes
+Pall = zeros(size(Ptemp_avg));
+
+for iTrial = 1:nTrials
+    x = data.trial{iTrial};  % 64 x 1000
+
+    [Pxx, ~] = periodogram(x', [], [], Fs);
+
+    Pall = Pall + mean(Pxx, 2);
+end
+
+Pall_avg = Pall / nTrials;
+
+% Plot averaged PSD
+figure;
+plot(f, 10*log10(Ptemp_avg), 'b', 'LineWidth', 1.5);
+hold on;
+plot(f, 10*log10(Pall_avg), 'r', 'LineWidth', 1.5);
+
+xlabel('Frequency (Hz)');
+ylabel('PSD (dB/Hz)');
+legend('temp\_data2', 'All trials average');
+xlim([0 Fs/2]);
+grid on;
+%%
+
 cfg              = [];
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';

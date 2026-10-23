@@ -2,10 +2,10 @@
 
 % Mandatory fixed options
 %folderSourceString = '/mnt/NeoLabData/Projects/ProjectDhyaan/BK1/';%'N:\Projects\ProjectDhyaan\BK1';
-folderSourceString = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1';
+folderSourceString = '/run/media/venkatesh/Data1/data/FCDataFromVinodJiani/ftData';
 
 % Location where FC data are stored.
-parentFolder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1';
+parentFolder = '/home/venkatesh/Documents/IISc/data';
 
 timestamp = char(datetime('now', 'Format', 'yyyy-MM-dd_HH-mm-ss'));
 connDataFolder = fullfile(parentFolder, ['savedata_parametric_' timestamp]);
@@ -14,7 +14,7 @@ connDataFolder = fullfile(parentFolder, ['savedata_parametric_' timestamp]);
 goodSubjectList = getGoodSubjectsBK1; % subjects for which data is computed
 [allSubjectNames,expDateList] = getDemographicDetails('BK1');
 
-ftDataFolder = fullfile(folderSourceString,'data','ftData'); % fieldtrip data is saved here
+ftDataFolder = fullfile(folderSourceString); % fieldtrip data is saved here
 %makeDirectory(ftDataFolder);
 
 badEyeCondition = 'ep'; % use 'wo' when eye data is not used and 'ep' for eye position. Note that bad trials will be removed before saving in fieldtrip format

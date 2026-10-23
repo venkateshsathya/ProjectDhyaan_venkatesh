@@ -1,18 +1,65 @@
+% AXIS SETTINGS: applied to every protocol tab and distance panel.
+yLimits = [0 0.5];       % [] = automatic; e.g. [0 0.1] or [-0.05 0.05].
+gridSetting = 'on'; % 'on' or 'off' for all panels.
+
 % Compare seed-averaged FC from two runs in protocol tabs and distance panels.
 % Each panel shows one curve per run, averaged across Oz, O2, POz and O1.
 % First average targets within each distance bin, then seeds within each subject,
 % then subjects within the selected group (omit NaNs at each step).
 % Run color and line style identify the input folder.
 % Edit these inputs, then run this script with the MATLAB Run button.
+% /run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption
+% /run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/
+
+option_flag = false;
+if option_flag
+% Compare LineNoise
 
 folders = { ...
-    '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/', ...
-    '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/BivariateGranger_500Hz'};
-runLabels = {'Run 1: Bivariate Oct9', 'Run 2: savedata Oct9'};
+    '/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption', ...
+    '/home/venkatesh/Documents/IISc/data/BivariateGranger_Nonparametric_removeLinenoise_neighbour_200Hz'};
+runLabels = {'zero_linenoiseremoval', 'neighbour_linenoiseremoval'};
+FC_metric = {'granger_bivariate', 'granger_bivariate'}; 
+else
+% Compare 200Hz vs 500Hz
+folders = {'/run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/',...
+    '/run/media/venkatesh/Data1/data/BivariateGranger_500Hz'};
+runLabels = {'200Hz','500hz'};
 FC_metric = {'granger', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
+end
+
+
+
+% Compare PPC with and without Line Noise removed
+folders = {'/run/media/venkatesh/Data1/data/FCDataFromVinodJiani/savedData',...
+    '/home/venkatesh/Documents/IISc/data/savedata_2026-10-22_17-04-59'};
+runLabels = {'PPC_withLinenoise','PPC_NoLineNoise'};
+FC_metric = {'ppc', 'ppc'}; % One saved filename suffix per folder, in the same order.
+
+%% Compare Granger bivariate 500 Hz with and without line noise removed with zero option
+folders = {'/home/venkatesh/Documents/IISc/data/Granger_500Hz_LineNoiseRemoved',...
+    '/run/media/venkatesh/Data1/data/BivariateGranger_500Hz'};
+runLabels = {'Granger_500Hz_withLinenoise','Granger_500Hz_NoLineNoise'};
+FC_metric = {'granger_bivariate', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
+
+%% Compare Granger bivariate 200 Hz with and without line noise removed with zero option
+folders = {'/run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th/',...
+    '/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption'};
+runLabels = {'Granger_200Hz_withLinenoise','Granger_200Hz_NoLineNoise'};
+FC_metric = {'granger', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
+
+%%
+
+%% Compare Granger bivariate 200 Hz versus 500 Hz both have line noise removed with zero option
+folders = {'/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption',...
+    '/home/venkatesh/Documents/IISc/data/Granger_500Hz_LineNoiseRemoved'};
+runLabels = {'Granger_200Hz_withoutLinenoise','Granger_500Hz_withoutLinenoise'};
+FC_metric = {'granger_bivariate', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
+
+
 % Example: {'granger', 'granger_bivariate'} matches *_ep_v8_granger.mat in
 % folders{1} and *_ep_v8_granger_bivariate.mat in folders{2}.
-lineStyles = {':', '--'}; % In folder order: ':' dotted, '--' dashed, '-' solid, '-.' dash-dot.
+lineStyles = {'-', '-'}; % In folder order: ':' dotted, '--' dashed, '-' solid, '-.' dash-dot.
 lineWidth = 1.5;
 runColors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980]; % One RGB row per folder.
 
@@ -28,7 +75,7 @@ epochChoice = 'post';  % 'pre', 'post', or 'combined'.
 % Also accepted: 'controls', 'meditators', 'all'; case and spaces are ignored.
 % Examples: plot_modes = {'meditation','control'};
 %           plot_modes = {'meditation','control','combined','meditation-control'};
-plot_modes = {'meditation-control'};%{'meditation','control','combined','meditation-control'};
+plot_modes = {'meditation'};%{'meditation','control','combined','meditation-control'};
 
 % CALCULATION (same as plot_fc_distance_groups_claude.m, per protocol)
 % Per subject: epoch mean -> target mean per distance bin -> seed mean, giving
@@ -57,7 +104,15 @@ plot_modes = {'meditation-control'};%{'meditation','control','combined','meditat
 
 seeds = [17 18 48 16]; % Oz, O2, POz, O1 in the saved 64-channel order.
 
-% Validate inputs before doing any work.
+% % Validate inputs before doing any work.
+% if ~isempty(yLimits)
+%     validateattributes(yLimits,{'numeric'},{'vector','numel',2,'real','finite'});
+%     if yLimits(1) >= yLimits(2)
+%         error('yLimits must be [lower upper], with lower < upper, or [].');
+%     end
+% end
+gridSetting = validatestring(gridSetting,{'on','off'});
+
 folders = cellstr(folders); runLabels = cellstr(runLabels); lineStyles = cellstr(lineStyles);
 FC_metric = cellstr(FC_metric);
 numRuns = numel(folders);
@@ -272,7 +327,7 @@ for p = 1:numel(protocols)
 
     % Overlay both runs in the same six panels for this protocol/mode.
     for m = 1:numModes
-        plotGroupTab(tabs{m,p},runResults,m,binNames,runColors,lineWidth);
+        plotGroupTab(tabs{m,p},runResults,m,binNames,runColors,lineWidth,yLimits,gridSetting);
     end
 end
 
@@ -315,7 +370,7 @@ switch g
 end
 end
 
-function plotGroupTab(tab,runResults,modeIndex,binNames,runColors,lineWidth)
+function plotGroupTab(tab,runResults,modeIndex,binNames,runColors,lineWidth,yLimits,gridSetting)
 % Six distance bins; plot only the within-subject seed average for each run.
 numRuns = numel(runResults);
 hasData = false(1,numRuns);
@@ -346,11 +401,14 @@ for b = 1:6
             'Color',runColors(runIdx,:),'LineStyle',R.lineStyle,'LineWidth',lineWidth, ...
             'DisplayName',sprintf('%s | %s',R.label,R.metric));
     end
-    title(ax(b),binNames{b}); grid(ax(b),'on');
+    title(ax(b),binNames{b}); grid(ax(b),gridSetting);
     xlabel(ax(b),'Frequency (Hz)'); ylabel(ax(b),'Seed-averaged outgoing FC');
     legend(ax(b),'show','Location','best','Interpreter','none','FontSize',8);
 end
 linkaxes(ax,'xy');
+% if ~isempty(yLimits)
+%     ylim(ax(1),yLimits); % Linked panels share these limits in every tab.
+% end
 title(tl,titleLines,'Interpreter','none');
 end
 

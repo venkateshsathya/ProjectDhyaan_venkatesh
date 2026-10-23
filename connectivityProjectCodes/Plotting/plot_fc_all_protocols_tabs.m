@@ -14,7 +14,8 @@ if strcmp(plot_FC,'granger')
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-16_16-28-39';
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_parametric_2026-10-16_20-59-30';
-    FC_metric = 'granger_parametric';
+    folder = '/home/venkatesh/Documents/IISc/data/savedata_2026-10-21_18-19-31';
+    FC_metric = 'granger_bivariate';
     yLabel = 'Mean outgoing Granger causality';
 else
     folder = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/serverCopies/connectivityProjectCodes/savedData';
