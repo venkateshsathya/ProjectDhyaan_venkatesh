@@ -1,6 +1,6 @@
 % GUI copy of plot_fc_all_protocols_tabs.m.
 % Saved matrices use C(source, target, frequency). Bad channels contain NaNs.
-folder = '/run/media/venkatesh/Data1/data/savedata_parametric_2026-10-16_20-59-30';
+folder = '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/200Hz_withLineNoise_keeptrials_no';
 FC_metric = 'granger_parametric';
 fileEnding = ['_ep_v8_' FC_metric '.mat'];
 protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};

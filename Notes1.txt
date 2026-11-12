@@ -1,0 +1,8 @@
+Linkto notes on Amorf analysis used in Bsmart external toolbox called by fieldtrip: A parametric approach. 
+
+References used for coding this up: 
+1: M. Morf, etal, Recursive Multichannel Maximum Entropy Spectral Estimation,
+IEEE trans. GeoSci. Elec., 1978, Vol.GE-16, No.2, pp85-94.
+2: S. Haykin, Nonlinear Methods of Spectral Analysis, 2nd Ed.
+Springer-Verlag, 1983, Chapter 2
+https://chatgpt.com/share/6aec2ae4-eeb8-83e8-8458-e662db187762

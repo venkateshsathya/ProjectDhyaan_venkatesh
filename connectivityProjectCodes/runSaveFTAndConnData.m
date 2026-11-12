@@ -40,7 +40,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Save Connectivity data %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % connMethod options: granger_bivariate, 'granger_multivariate','granger'
-connMethod = 'ppc';
+connMethod = 'granger_bivariate';
 % global remove_bad_eletrod_flag
 add_params.remove_bad_eletrod_flag = true;
 % global foilim_max

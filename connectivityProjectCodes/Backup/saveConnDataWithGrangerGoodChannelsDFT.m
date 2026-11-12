@@ -132,47 +132,13 @@ end
 
 %%
 %%
-flag_plot_PSD_lineremoval = true;
-if flag_plot_PSD_lineremoval
-    %%
-    Fs = data.fsample;
-    N = 1000;  % Samples per trial
 
-    % Average PSD for temp_data2 (17 trials)
-    Ptemp = 0;
-    for iTrial = 1:numel(temp_data2)
-        x = temp_data2{iTrial};  % 64 x 1000
-        [Pxx, f] = periodogram(x', [], N, Fs);
-        Ptemp = Ptemp + mean(Pxx, 2);
-    end
-    Ptemp = Ptemp / numel(temp_data2);
-
-    % Average PSD for data.trial (71 trials)
-    Pall = 0;
-    for iTrial = 1:numel(data.trial)
-        x = data.trial{iTrial};  % 64 x 1000
-        [Pxx, ~] = periodogram(x', [], N, Fs);
-        Pall = Pall + mean(Pxx, 2);
-    end
-    Pall = Pall / numel(data.trial);
-
-    % Plot
-    figure;
-    plot(f, 10*log10(Ptemp), 'b', 'LineWidth', 1.5); hold on;
-    plot(f, 10*log10(Pall), 'r', 'LineWidth', 1.5);
-
-    xlabel('Frequency (Hz)');
-    ylabel('Average PSD (dB/Hz)');
-    legend('With Line noise', 'Line noise removed');
-    xlim([0 Fs/2]);
-    grid on;
-end
 %%
 
 cfg              = [];
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.tapsmofrq    = 1;
+cfg.tapsmofrq    = 4;
 if(strcmp(method,'coh'))
     cfg.output = 'powandcsd';
 else
@@ -182,89 +148,7 @@ end
 
 cfg.foilim       = [0 add_params.foilim_max]; % Full spectrum for Granger factorization.
 freqPost = ft_freqanalysis(cfg, data);
-plot_linenoise_removal_PSD_taper = true;
 
-% Compare PSD before/after line-noise removal.
-if plot_linenoise_removal_PSD_taper
-    cfgPSD = cfg;
-    cfgPSD.output = 'pow';
-    cfgPSD.keeptrials = 'yes';
-    cfgPSD.keeptapers = 'no';
-
-    dataBefore = data;
-    dataBefore.trial = temp_data2;
-
-    psdBefore = ft_freqanalysis(cfgPSD, dataBefore);
-    psdAfter  = ft_freqanalysis(cfgPSD, data);
-
-    goodCh = true(numel(data.label), 1);
-    goodCh(data.badElecs) = false;
-
-    % Dimensions: trial x good channel x frequency.
-    Pbefore = psdBefore.powspctrm(:, goodCh, :);
-    Pafter  = psdAfter.powspctrm(:, goodCh, :);
-    nTrials = size(Pbefore, 1);
-    nCh = sum(goodCh);
-    nFreq = numel(psdBefore.freq);
-
-    % Channel PSDs: average trials in linear power.
-    channelBefore = reshape(mean(Pbefore, 1), nCh, nFreq);
-    channelAfter  = reshape(mean(Pafter, 1), nCh, nFreq);
-
-    % Overall mean: average channels in linear power.
-    meanBefore = mean(channelBefore, 1);
-    meanAfter  = mean(channelAfter, 1);
-
-    % One row per trial-channel combination.
-    allBefore = reshape(Pbefore, [], nFreq);
-    allAfter  = reshape(Pafter, [], nFreq);
-
-    fig = figure('Name', 'PSD: line-noise removal', ...
-        'NumberTitle', 'off', 'Color', 'w');
-    tg = uitabgroup(fig);
-
-    tabNames = {'Mean PSD', 'All channels', 'All trials and channels'};
-    beforePlots = {meanBefore, channelBefore, allBefore};
-    afterPlots  = {meanAfter, channelAfter, allAfter};
-    plotTitles = { ...
-        'MTMFFT, DPSS based PSD calculation', ...
-        sprintf('%d channels; each averaged across trials', nCh), ...
-        sprintf('%d trials x %d channels = %d curves per condition', ...
-        nTrials, nCh, nTrials*nCh)};
-
-    ax = gobjects(1, 3);
-    for k = 1:3
-        tab = uitab(tg, 'Title', tabNames{k});
-        ax(k) = axes('Parent', tab);
-        hold(ax(k), 'on');
-
-        plot(ax(k), psdBefore.freq, ...
-            10*log10(max(beforePlots{k}, realmin)).', ...
-            'Color', [0.4 0.6 1], 'LineWidth', 0.5, ...
-            'HandleVisibility', 'off');
-
-        plot(ax(k), psdAfter.freq, ...
-            10*log10(max(afterPlots{k}, realmin)).', ...
-            'Color', [1 0.5 0.5], 'LineWidth', 0.5, ...
-            'HandleVisibility', 'off');
-
-        h1 = plot(ax(k), NaN, NaN, ...
-            'Color', [0.4 0.6 1], 'LineWidth', 1.5);
-        h2 = plot(ax(k), NaN, NaN, ...
-            'Color', [1 0.5 0.5], 'LineWidth', 1.5);
-
-        legend(ax(k), [h1 h2], ...
-            {'Before linse noise removal', 'After line noise removal'}, ...
-            'Location', 'best');
-        title(ax(k), plotTitles{k});
-        xlabel(ax(k), 'Frequency (Hz)');
-        ylabel(ax(k), 'PSD (dB/Hz)');
-        xlim(ax(k), [psdAfter.freq(1), psdAfter.freq(end)]);
-        grid(ax(k), 'on');
-    end
-
-    linkaxes(ax, 'x'); % Zooming near 50 Hz updates all tabs.
-end
 
 
 

@@ -1,7 +1,7 @@
 % AXIS SETTINGS: applied to every protocol tab and distance panel.
 yLimits = [0 0.5];       % [] = automatic; e.g. [0 0.1] or [-0.05 0.05].
 gridSetting = 'on'; % 'on' or 'off' for all panels.
-
+maxFreqHz = [];
 % Compare seed-averaged FC from two runs in protocol tabs and distance panels.
 % Each panel shows one curve per run, averaged across Oz, O2, POz and O1.
 % First average targets within each distance bin, then seeds within each subject,
@@ -55,15 +55,95 @@ folders = {'/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Ze
     '/home/venkatesh/Documents/IISc/data/Granger_500Hz_LineNoiseRemoved'};
 runLabels = {'Granger_200Hz_withoutLinenoise','Granger_500Hz_withoutLinenoise'};
 FC_metric = {'granger_bivariate', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
+%% Compare Granger bivariate PARAMETRIC 200 Hz with and without line noise removed with zero option
+folders = {'/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/200Hz_withLineNoise_keeptrials_no',...
+    '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/200Hz_withoutLineNoise_keeptrials_no'};
+runLabels = {'GrangerParam_200Hz_withLN','GrangerParam_200Hz_withoutLN'};
+FC_metric = {'granger_parametric', 'granger_parametric'}; % One saved filename suffix per folder, in the same order.
+
+%% Compare Granger bivariate PARAMETRIC 200 Hz vs 500 Hz with Line noise
+folders = {'/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/200Hz_withLineNoise_keeptrials_no',...
+    '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/500Hz_withLineNoise_keeptrials_no'};
+runLabels = {'GrangerParam_200Hz_withLN','GrangerParam_500Hz_withLN'};
+FC_metric = {'granger_parametric', 'granger_parametric'}; % One saved filename suffix per folder, in the same order.
+
+%% Compare Granger bivariate 200 Hz versus 500 Hz both have line noise removed with zero option
+folders = {'/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption',...
+    '/home/venkatesh/Documents/IISc/data/Granger_500Hz_LineNoiseRemoved'};
+runLabels = {'Granger_200Hz_withoutLinenoise','Granger_500Hz_withoutLinenoise'};
+FC_metric = {'granger_bivariate', 'granger_bivariate'}; % One saved filename suffix per folder, in the same order.
 
 
+%% Biosmart 200 vs 500 hz
+folders = {'/home/venkatesh/Documents/IISc/data/200_500_parametric_biosmart_WithAndwithoutLineNoise/200Hz_withoutLineNoise_keeptrials_no',...
+    '/home/venkatesh/Documents/IISc/data/500Hz_withoutLineNoise_keeptrials_no'};
+runLabels = {'Granger_200Hz_withoutLinenoise','Granger_500Hz_withoutLinenoise'};
+FC_metric = {'granger_parametric', 'granger_parametric'}; % One saved filename suffix per folder, in the same order.
+maxFreqHz = [200 500]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+
+%% Biosmart 200 Hz with and without line noise
+folders = {'/home/venkatesh/Documents/IISc/data/200_500_parametric_biosmart_WithAndwithoutLineNoise/200Hz_withoutLineNoise_keeptrials_no',...
+    '/home/venkatesh/Documents/IISc/data/200_500_parametric_biosmart_WithAndwithoutLineNoise/200Hz_withLineNoise_keeptrials_no'};
+runLabels = {'Granger_200Hz_withLinenoise','Granger_200Hz_withoutLinenoise'};
+FC_metric = {'granger_parametric', 'granger_parametric'}; % One saved filename suffix per folder, in the same order.
+maxFreqHz = [200 200]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+%% 100 vs 200 Hz
+folders = {"/home/venkatesh/Documents/IISc/data/100Hz_withoutLineNoise_keeptrials_no",...
+"/home/venkatesh/Documents/IISc/data/200_500_parametric_biosmart_WithAndwithoutLineNoise/200Hz_withoutLineNoise_keeptrials_no"};
+runLabels = {'Parametric_100Hz','Parametric_200Hz'};
+FC_metric = {'granger_parametric', 'granger_parametric'};
+maxFreqHz = [100 200]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+
+%% Fs 200,p=20, Bsmart vs Biosig options of 1,2,5,6,7
+%/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig1_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no
+biosigoption = 2;
+folders = {"/home/venkatesh/Documents/IISc/data/100Hz_withoutLineNoise_keeptrials_no",...
+    ['/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig', num2str(biosigoption),'_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no']};
+runLabels = {'Bmsart',['Biosig_option_', num2str(biosigoption)]};
+FC_metric = {'granger_parametric', 'granger_parametric'};
+maxFreqHz = [100 100]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+%% Fs 200,p=20, Compare amongst Biosig options of 1,2,5,6,7
+%/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig1_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no
+% Mode determines estimation algorithm. 
+%  1:  Correlation Function Estimation method using biased correlation function estimation method
+%   		also called the "multichannel Yule-Walker" [1,2] 
+%  6:  Correlation Function Estimation method using unbiased correlation function estimation method
+%
+%  2:  Partial Correlation Estimation: Vieira-Morf [2] using unbiased covariance estimates.
+%               In [1] this mode was used and (incorrectly) denominated as Nutall-Strand. 
+%		Its the DEFAULT mode; according to [1] it provides the most accurate estimates.
+%  5:  Partial Correlation Estimation: Vieira-Morf [2] using biased covariance estimates.
+%		Yields similar results than Mode=2;
+%
+%  3:  Partial Correlation Estimation: Nutall-Strand [2] (biased correlation function)
+%  7:  Partial Correlation Estimation: Nutall-Strand [2] (unbiased correlation function)
+%
+biosigoption1 = 6;
+biosigoption2 = 2;
+folders = {['/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig', num2str(biosigoption1),'_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no'],...
+    ['/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig', num2str(biosigoption2),'_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no']};
+runLabels = {['Biosig_option_', num2str(biosigoption1)],['Biosig_option_', num2str(biosigoption2)]};
+FC_metric = {'granger_parametric', 'granger_parametric'};
+maxFreqHz = [100 100]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+%% 
+% /run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption
+%/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig1_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no
+biosigoption = 2;
+folders = {"/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved_Zerooption",...
+    ['/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig', num2str(biosigoption),'_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no']};
+runLabels = {'nonparametric',['Biosig_option_', num2str(biosigoption)]};
+FC_metric = {'granger_bivariate', 'granger_parametric'};
+maxFreqHz = [100 100]; % Example: 1000 Hz run up to 200 Hz, 200 Hz run up to 100 Hz.
+if isempty(maxFreqHz)
+    maxFreqHz = [500, 500];
+end
 % Example: {'granger', 'granger_bivariate'} matches *_ep_v8_granger.mat in
 % folders{1} and *_ep_v8_granger_bivariate.mat in folders{2}.
 lineStyles = {'-', '-'}; % In folder order: ':' dotted, '--' dashed, '-' solid, '-.' dash-dot.
 lineWidth = 1.5;
 runColors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980]; % One RGB row per folder.
 
-protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
+protocols = {'M1','G2'};%{'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};
 epochChoice = 'post';  % 'pre', 'post', or 'combined'.
 
 % PLOT MODES (a cell array; one new figure per entry, in the order given).
@@ -125,6 +205,7 @@ end
 if any(~ismember(lineStyles,{'-', '--', ':', '-.'}))
     error('Each lineStyles entry must be ''-'', ''--'', '':'' or ''-.''.');
 end
+validateattributes(maxFreqHz,{'numeric'},{'vector','numel',numRuns,'real','positive','nonnan'});
 validateattributes(lineWidth,{'numeric'},{'scalar','real','finite','positive'});
 validateattributes(runColors,{'numeric'},{'size',[numRuns 3],'real','finite','>=',0,'<=',1});
 for runIdx = 1:numRuns
@@ -327,7 +408,7 @@ for p = 1:numel(protocols)
 
     % Overlay both runs in the same six panels for this protocol/mode.
     for m = 1:numModes
-        plotGroupTab(tabs{m,p},runResults,m,binNames,runColors,lineWidth,yLimits,gridSetting);
+        plotGroupTab(tabs{m,p},runResults,m,binNames,runColors,lineWidth,yLimits,gridSetting,maxFreqHz);
     end
 end
 
@@ -370,7 +451,7 @@ switch g
 end
 end
 
-function plotGroupTab(tab,runResults,modeIndex,binNames,runColors,lineWidth,yLimits,gridSetting)
+function plotGroupTab(tab,runResults,modeIndex,binNames,runColors,lineWidth,yLimits,gridSetting,maxFreqHz)
 % Six distance bins; plot only the within-subject seed average for each run.
 numRuns = numel(runResults);
 hasData = false(1,numRuns);
@@ -397,7 +478,9 @@ for b = 1:6
         R = runResults{runIdx};
         meanFC = R.modes(modeIndex).meanFC;
         % Row 5 was averaged across seeds per subject before the group mean.
-        plot(ax(b),R.freq,reshape(meanFC(5,b,:),1,[]), ...
+        % Limit each curve on its own saved frequency grid; do not interpolate.
+        freqMask = R.freq <= maxFreqHz(runIdx);
+        plot(ax(b),R.freq(freqMask),reshape(meanFC(5,b,freqMask),1,[]), ...
             'Color',runColors(runIdx,:),'LineStyle',R.lineStyle,'LineWidth',lineWidth, ...
             'DisplayName',sprintf('%s | %s',R.label,R.metric));
     end

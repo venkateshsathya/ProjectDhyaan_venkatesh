@@ -1,0 +1,462 @@
+% Overlay all saved BioSig estimators and BSMART, with BioSig 8 excluded.
+% Same averaging/group modes as plot_fc_distance_groups_Allprotols_seedavg_compare_runs:
+% target mean per distance bin -> seed mean per subject -> equal-weight subject mean.
+% Run this script with the MATLAB Run button. No connectivity is recomputed.
+%
+% BioSig 1/6: multichannel Yule-Walker (biased/unbiased).
+% BioSig 2/5: Vieira-Morf (unbiased/biased). BioSig 7: Nuttall-Strand.
+% PPC uses its own right y-axis and saved frequency grid; no rescaling of values.
+% BSMART is black dash-dot when PPC is enabled; PPC is black dashed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Input options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+biosigRoot = '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24';
+bsmartFolder = '/home/venkatesh/Documents/IISc/data/100HzMaxFreq_Bsmart_RepeatRunByMistake';
+overlayPPC = true;
+ppcDataRoot = '/home/venkatesh/Documents/IISc/data/PPC_LineNoiseRemoved';
+% ppcDataRoot = '/run/media/venkatesh/Data1/data/FCDataFromVinodJiani/savedData'; %Data from Vinod
+ppcYLimits = [];                        % [] = automatic per panel; or [0 1].
+biosigOptions = [2 5 7];                     % [] = all matching options except 8; or [1 2 5 6 7].
+sampleRate = 200;
+mvarOrder = 20;
+maxFrequency = 100;
+protocols = {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'};                     % Or {'EO1','EC1','G1','M1','G2','EO2','EC2','M2'}.
+epochChoice = 'combined';                   % 'pre', 'post', or 'combined' (Pre/Post mean).
+subjectsOverride = {};                 % {} = group subjects; or {'053DR'} / a subject list.
+plot_modes = {'meditation'};              % 'meditation', 'control', 'combined', 'meditation-control'.
+% Example: plot_modes = {'meditation','control','combined','meditation-control'};
+% With subjectsOverride={'053DR'}, use 'combined' to show that subject alone.
+%{
+| Dropdown choice | Electrode indices | Electrode names, in the same order |
+|---|---|---|
+| **BackOccipital** | `[17 18 48 16]` | **Oz, O2, POz, O1** |
+| **LeftOccipital** | `[14 44 47]` | **P3, P1, PO3** |
+| **RightOccipital** | `[19 49 52]` | **P4, PO4, P2** |
+| **Frontal** | `[2 34 35 62 36 63]` | **Fz, AF3, AFz, AF4, F1, F2** |
+%}
+seed_electrode = 'Frontal'; []
+seeds = [17];%[17 18 48 16];                  % Oz, O2, POz, O1.
+badEyeCondition = 'ep';
+badTrialVersion = 'v8';
+yLimits = [];                          % [] = automatic; or [0 0.5].
+xLimits = [0 100];                      % [] = automatic.
+gridSetting = 'on';
+lineWidth = 1.6;
+
+%%%%%%%%%%%%%%%%%%%%%%%% Discover comparison runs %%%%%%%%%%%%%%%%%%%%%%%%
+bioTests = findBioSigComparisonRuns(biosigRoot,biosigOptions,sampleRate,mvarOrder,maxFrequency);
+folders = {bioTests.folder};
+runLabels = arrayfun(@(test) sprintf('BioSig %d',test.algorithm),bioTests,'UniformOutput',false);
+folders{end+1} = bsmartFolder;
+runLabels{end+1} = 'BSMART';
+numRuns = numel(folders);
+FC_metric = repmat({'granger_parametric'},1,numRuns);
+maxFreqHz = repmat(maxFrequency,1,numRuns);
+lineStyles = repmat({'-'},1,numRuns);
+lineStyles{end} = '--';
+runColors = [lines(numel(bioTests)); 0 0 0];
+numGCRuns = numRuns;
+if overlayPPC
+    lineStyles{end} = '-.';             % Distinguish BSMART from dashed PPC.
+    folders{end+1} = ppcDataRoot;
+    runLabels{end+1} = 'PPC';
+    FC_metric{end+1} = 'ppc';
+    maxFreqHz(end+1) = maxFrequency;
+    lineStyles{end+1} = '--';
+    runColors(end+1,:) = [0 0 0];
+end
+fprintf('Comparing Fs=%g Hz, p=%d: %s\n',sampleRate,mvarOrder,strjoin(runLabels,', '));
+% Each estimator retains its available subjects and native saved frequency grid.
+% Missing/unreadable files are skipped and counts are shown separately.
+% Rall.<protocol>.runs{runIndex} retains subject curves, means, counts and skips.
+% Rall.<protocol>.ppc retains PPC with the same group/epoch/subject selection.
+% figs(m) corresponds to plot_modes{m}; protocol tabs contain six distance bins.
+
+gridSetting = validatestring(gridSetting,{'on','off'});
+
+folders = cellstr(folders); runLabels = cellstr(runLabels); lineStyles = cellstr(lineStyles);
+FC_metric = cellstr(FC_metric);
+numRuns = numel(folders);
+if numRuns < 1 || numel(runLabels) ~= numRuns || numel(lineStyles) ~= numRuns || numel(FC_metric) ~= numRuns
+    error('Provide matching folders, runLabels, FC_metric entries and lineStyles.');
+end
+if any(cellfun(@(metric) isempty(strtrim(metric)),FC_metric))
+    error('Each FC_metric entry must be a nonempty saved filename suffix.');
+end
+if any(~ismember(lineStyles,{'-', '--', ':', '-.'}))
+    error('Each lineStyles entry must be ''-'', ''--'', '':'' or ''-.''.');
+end
+validateattributes(maxFreqHz,{'numeric'},{'vector','numel',numRuns,'real','positive','nonnan'});
+validateattributes(lineWidth,{'numeric'},{'scalar','real','finite','positive'});
+validateattributes(runColors,{'numeric'},{'size',[numRuns 3],'real','finite','>=',0,'<=',1});
+for runIdx = 1:numRuns
+    if ~isfolder(folders{runIdx})
+        warning('FCOverlay:MissingFolder','%s: folder not found: %s',runLabels{runIdx},folders{runIdx});
+    end
+end
+
+if ~ismember(lower(epochChoice),{'pre','post','combined'})
+    error('epochChoice must be ''pre'', ''post'' or ''combined'' (got ''%s'').',epochChoice);
+end
+plot_modes = cellstr(plot_modes); plot_modes = plot_modes(:).';
+if isempty(plot_modes), error('plot_modes is empty; give at least one mode.'); end
+numModes = numel(plot_modes);
+modePos = cell(1,numModes); modeNeg = cell(1,numModes);
+modeLabel = cell(1,numModes); modeKey = cell(1,numModes);
+for m = 1:numModes
+    [modePos{m},modeNeg{m},modeLabel{m}] = parseMode(plot_modes{m});
+    modeKey{m} = [modePos{m} '-' modeNeg{m}];
+end
+[~,keepIdx] = unique(modeKey,'stable'); % Ignore repeated modes.
+plot_modes = plot_modes(keepIdx); modePos = modePos(keepIdx); modeNeg = modeNeg(keepIdx);
+modeLabel = modeLabel(keepIdx); numModes = numel(plot_modes);
+
+[allSubjects,meditationSubjects,controlSubjects] = getGoodSubjectsBK1;
+groupSubjects.meditation = meditationSubjects(:);
+groupSubjects.control    = controlSubjects(:);
+groupSubjects.combined   = allSubjects(:);
+if ~isempty(subjectsOverride)
+    subjectsOverride = cellstr(subjectsOverride);
+    groupSubjects.meditation = intersect(groupSubjects.meditation,subjectsOverride,'stable');
+    groupSubjects.control = intersect(groupSubjects.control,subjectsOverride,'stable');
+    groupSubjects.combined = intersect(groupSubjects.combined,subjectsOverride,'stable');
+end
+
+% Groups needed by the requested modes, and the subjects to load for them.
+neededGroups = unique([modePos modeNeg(~cellfun(@isempty,modeNeg))],'stable');
+subjectsToLoad = cell(0,1);
+for gi = 1:numel(neededGroups)
+    subjectsToLoad = [subjectsToLoad; groupSubjects.(neededGroups{gi})]; %#ok<AGROW>
+end
+subjectsToLoad = unique(subjectsToLoad,'stable');
+
+[electrodeGroups,binNames,binCenters] = getElectrodeGroupsConn('rel',seeds,'actiCap64_UOL');
+binCenters = fliplr(binCenters); % Match the helper's near-to-far group order.
+for r = 1:length(seeds)
+    for b = 1:6
+        electrodeGroups{r,b} = setdiff(electrodeGroups{r,b},seeds(r),'stable');
+    end
+end
+
+% One figure per mode, each holding a tab group with one tab per protocol.
+figs = gobjects(1,numModes); tabs = cell(numModes,numel(protocols));
+for m = 1:numModes
+    figs(m) = figure('Color','w','Name',sprintf('BioSig vs BSMART | %s | %s | Fs=%g Hz, p=%d',modeLabel{m},epochChoice,sampleRate,mvarOrder), ...
+        'NumberTitle','off','Units','normalized','OuterPosition',[0 0 1 1]);
+    tabGroup = uitabgroup(figs(m));
+    for p = 1:numel(protocols)
+        tabs{m,p} = uitab(tabGroup,'Title',protocols{p});
+    end
+end
+Rall = struct;
+
+for p = 1:numel(protocols)
+    protocol = protocols{p};
+
+    runResults = cell(1,numRuns);
+    for runIdx = 1:numRuns
+        folder = folders{runIdx};
+        metric = FC_metric{runIdx};
+        R = struct('folder',folder,'label',runLabels{runIdx},'metric',metric,'lineStyle',lineStyles{runIdx}, ...
+            'freq',[],'binNames',{binNames},'binCenters',binCenters, ...
+            'skipped',{{}},'subjectNames',{{}},'subjectFC',[]);
+        R.modes = struct('mode',{},'label',{},'meanFC',{},'title',{},'countLabel',{},'message',{});
+        for m = 1:numModes
+            R.modes(m) = struct('mode',plot_modes{m},'label',modeLabel{m},'meanFC',[], ...
+                'title','','countLabel','','message',sprintf('%s: no usable subjects',runLabels{runIdx}));
+        end
+
+        % Locate saved subject files for this protocol and run.
+        files = dir(fullfile(folder,'*',[protocol '_' badEyeCondition '_' badTrialVersion '_' metric '.mat']));
+        availableSubjects = cell(1,numel(files));
+        for s = 1:numel(files)
+            [~,availableSubjects{s}] = fileparts(files(s).folder);
+        end
+        [subjectNames,~,inputIndex] = intersect(subjectsToLoad,availableSubjects,'stable');
+
+        % Subjects with no saved file for this protocol.
+        skipped = cell(0,2);
+        missingFile = setdiff(subjectsToLoad(:),availableSubjects(:),'stable');
+        for s = 1:numel(missingFile)
+            skipped(end+1,:) = {missingFile{s},'no saved file in folder for this protocol'}; %#ok<SAGROW>
+        end
+
+        % Epoch mean -> distance-group target mean -> within-subject seed mean.
+        subjectFC = []; freq = [];
+        isUsed = false(numel(subjectNames),1);
+        for s = 1:numel(subjectNames)
+            filePath = fullfile(files(inputIndex(s)).folder,files(inputIndex(s)).name);
+            try
+                S = load(filePath,'connPre','connPost','freqPre','freqPost','numGoodTrials');
+            catch readError
+                skipped(end+1,:) = {subjectNames{s},['cannot read file: ' readError.message]}; %#ok<SAGROW>
+                continue
+            end
+            if ~all(isfield(S,{'connPre','connPost','freqPre','freqPost','numGoodTrials'}))
+                skipped(end+1,:) = {subjectNames{s},'incomplete saved fields'}; %#ok<SAGROW>
+                continue
+            end
+
+            % Skip subjects with no usable data (numGoodTrials==0 saves empty arrays).
+            if isempty(S.numGoodTrials) || S.numGoodTrials == 0 || isempty(S.connPre) || isempty(S.connPost)
+                skipped(end+1,:) = {subjectNames{s},'saved file has no data (numGoodTrials==0 or empty conn)'}; %#ok<SAGROW>
+                continue
+            end
+
+            switch lower(epochChoice)
+                case 'pre', C = S.connPre; thisFreq = S.freqPre;
+                case 'post', C = S.connPost; thisFreq = S.freqPost;
+                case 'combined'
+                    if ~isequal(S.freqPre(:),S.freqPost(:))
+                        skipped(end+1,:) = {subjectNames{s},'Pre/Post frequency grids differ'}; %#ok<SAGROW>
+                        continue
+                    end
+                    C = (S.connPre + S.connPost)/2; thisFreq = S.freqPost;
+            end
+
+            if isempty(C) || isempty(thisFreq), continue; end
+            % Allocate on the first VALID subject, using its frequency grid.
+            if isempty(subjectFC)
+                freq = thisFreq;
+                subjectFC = nan(numel(subjectNames),5,6,numel(freq));
+            elseif numel(thisFreq) ~= numel(freq) || any(abs(thisFreq(:)-freq(:)) > 1e-9)
+                skipped(end+1,:) = {subjectNames{s},'frequency grid differs from the first subject'}; %#ok<SAGROW>
+                continue
+            end
+
+            for r = 1:length(seeds)
+                for b = 1:6
+                    subjectFC(s,r,b,:) = reshape(mean(C(seeds(r),electrodeGroups{r,b},:),2,'omitnan'),1,1,1,[]);
+                end
+            end
+            subjectFC(s,5,:,:) = mean(subjectFC(s,1:4,:,:),2,'omitnan');
+
+            % Skip subjects where every seed is bad, so no value exists to average.
+            if all(isnan(subjectFC(s,:,:,:)),'all')
+                subjectFC(s,:,:,:) = NaN;
+                skipped(end+1,:) = {subjectNames{s},'all seed electrodes/targets are NaN (bad electrodes)'}; %#ok<SAGROW>
+                continue
+            end
+            isUsed(s) = true;
+        end
+
+        % Report what was used and dropped for this protocol.
+        fprintf('%s | %s | %s | %s:',runLabels{runIdx},metric,protocol,epochChoice);
+        for gi = 1:numel(neededGroups)
+            gn = neededGroups{gi};
+            fprintf(' %s %d/%d;',gn,sum(isUsed(:) & ismember(subjectNames(:),groupSubjects.(gn))),numel(groupSubjects.(gn)));
+        end
+        fprintf(' (used/selected)\n');
+        for s = 1:size(skipped,1)
+            fprintf('  SKIPPED %s: %s\n',skipped{s,1},skipped{s,2});
+        end
+
+        R.skipped = skipped;
+        % Keep the other run available even when this run has no usable data.
+        if isempty(subjectFC) || ~any(isUsed)
+            warning('FCOverlay:NoData','%s: no usable subjects for protocol %s.',runLabels{runIdx},protocol);
+            runResults{runIdx} = R;
+            continue
+        end
+
+        % Keep only subjects actually used, so names and rows stay aligned.
+        subjectFC = subjectFC(isUsed,:,:,:);
+        subjectNames = subjectNames(isUsed);
+
+        % Group means for the groups needed by the requested modes.
+        R.freq = freq(:).';
+        R.subjectNames = subjectNames;
+        R.subjectFC = subjectFC;
+        nGroup = struct;
+        for gi = 1:numel(neededGroups)
+            gn = neededGroups{gi};
+            gMask = ismember(subjectNames(:),groupSubjects.(gn));
+            nGroup.(gn) = sum(gMask);
+            R.(gn).subjectNames = subjectNames(gMask);
+            R.(gn).meanFC = reshape(mean(subjectFC(gMask,:,:,:),1,'omitnan'),5,6,[]);
+            R.(gn).validSubjectCounts = reshape(sum(~isnan(subjectFC(gMask,:,:,:)),1),5,6,[]);
+        end
+
+        % Mean data, title and any problem message for each requested mode.
+        modeMean = cell(1,numModes); modeTitle = cell(1,numModes); modeMsg = cell(1,numModes);
+        for m = 1:numModes
+            pos = modePos{m}; neg = modeNeg{m};
+            if isempty(neg)
+                if nGroup.(pos) == 0
+                    modeMsg{m} = sprintf('%s: no %s subjects',protocol,lower(displayName(pos)));
+                else
+                    modeMean{m} = R.(pos).meanFC;
+                    modeTitle{m} = sprintf('%s | %s | %s | N=%d',protocol,modeLabel{m},epochChoice,nGroup.(pos));
+                end
+            else
+                if nGroup.(pos) == 0 || nGroup.(neg) == 0
+                    modeMsg{m} = sprintf('%s: %s needs subjects in both groups',protocol,modeLabel{m});
+                else
+                    modeMean{m} = R.(pos).meanFC - R.(neg).meanFC;
+                    modeTitle{m} = sprintf('%s | %s | %s | N(%s)=%d, N(%s)=%d',protocol,modeLabel{m},epochChoice, ...
+                        displayName(pos),nGroup.(pos),displayName(neg),nGroup.(neg));
+                end
+            end
+            if isempty(neg)
+                R.modes(m).countLabel = sprintf('n=%d',nGroup.(pos));
+            else
+                R.modes(m).countLabel = sprintf('n=%d/%d',nGroup.(pos),nGroup.(neg));
+            end
+            R.modes(m).meanFC = modeMean{m};
+            if isempty(modeMean{m})
+                R.modes(m).message = sprintf('%s: %s',runLabels{runIdx},modeMsg{m});
+            else
+                R.modes(m).title = sprintf('%s [%s]: %s',runLabels{runIdx},metric,modeTitle{m});
+                R.modes(m).message = '';
+            end
+        end
+        runResults{runIdx} = R;
+    end % runIdx
+    Rall.(protocol).runs = runResults(1:numGCRuns);
+    if overlayPPC, Rall.(protocol).ppc = runResults{end}; end
+
+    % Overlay all estimators in the same six panels for this protocol/mode.
+    for m = 1:numModes
+        plotGroupTab(tabs{m,p},runResults,m,binNames,runColors,lineWidth,yLimits,ppcYLimits,gridSetting,maxFreqHz,xLimits,protocol,modeLabel{m},epochChoice,sampleRate,mvarOrder);
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Local functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [pos,neg,label] = parseMode(modeStr)
+% 'meditation' -> pos='meditation', neg=''. 'meditation-control' -> pos, neg both set.
+s = regexprep(lower(strtrim(char(modeStr))),'\s+','');
+parts = strsplit(s,'-');
+if numel(parts) > 2 || any(cellfun(@isempty,parts))
+    error('Bad plot mode ''%s''. Use ''name'' or ''name-name'' (e.g. ''meditation-control'').',modeStr);
+end
+pos = canonicalGroup(parts{1},modeStr);
+neg = '';
+if numel(parts) == 2
+    neg = canonicalGroup(parts{2},modeStr);
+    if strcmp(pos,neg)
+        error('Bad plot mode ''%s'': both sides are the same group.',modeStr);
+    end
+    label = [displayName(pos) ' - ' displayName(neg)];
+else
+    label = displayName(pos);
+end
+end
+
+function g = canonicalGroup(name,modeStr)
+switch name
+    case {'meditation','meditator','meditators','med'}, g = 'meditation';
+    case {'control','controls','con'},                 g = 'control';
+    case {'combined','combination','all'},             g = 'combined';
+    otherwise
+        error('Unknown group ''%s'' in plot mode ''%s''. Use meditation, control or combined.',name,modeStr);
+end
+end
+
+function d = displayName(g)
+switch g
+    case 'meditation', d = 'Meditation';
+    case 'control',    d = 'Control';
+    otherwise,         d = 'Combined';
+end
+end
+
+function plotGroupTab(tab,runResults,modeIndex,binNames,runColors,lineWidth,yLimits,ppcYLimits,gridSetting,maxFreqHz,xLimits,protocol,modeLabel,epochChoice,sampleRate,mvarOrder)
+% Six distance bins; plot only the within-subject seed average for each run.
+numRuns = numel(runResults);
+hasData = false(1,numRuns);
+isPPC = false(1,numRuns);
+titleLines = cell(1,numRuns);
+for runIdx = 1:numRuns
+    mode = runResults{runIdx}.modes(modeIndex);
+    hasData(runIdx) = ~isempty(mode.meanFC);
+    isPPC(runIdx) = strcmp(runResults{runIdx}.metric,'ppc');
+    if hasData(runIdx)
+        titleLines{runIdx} = mode.title;
+    else
+        titleLines{runIdx} = mode.message;
+    end
+end
+if ~any(hasData)
+    showMessage(tab,strjoin(titleLines,sprintf('\n')));
+    return
+end
+hasPPC = any(hasData & isPPC);
+tl = tiledlayout(tab,3,2,'TileSpacing','compact','Padding','compact');
+ax = gobjects(1,6);
+gcAutoLimits = zeros(6,2);
+for b = 1:6
+    ax(b) = nexttile(tl); hold(ax(b),'on');
+    for runIdx = 1:numRuns
+        if ~hasData(runIdx), continue; end
+        R = runResults{runIdx};
+        meanFC = R.modes(modeIndex).meanFC;
+        % Row 5 was averaged across seeds per subject before the group mean.
+        % Limit each curve on its own saved frequency grid; do not interpolate.
+        freqMask = R.freq <= maxFreqHz(runIdx);
+        curveLabel = sprintf('%s (%s)',R.label,R.modes(modeIndex).countLabel);
+        curveWidth = lineWidth;
+        curveTag = 'EstimatorComparisonCurve';
+        if isPPC(runIdx)
+            yyaxis(ax(b),'right'); hold(ax(b),'on');
+            curveLabel = sprintf('PPC (%s, right axis)',R.modes(modeIndex).countLabel);
+            curveWidth = max(2,lineWidth);
+            curveTag = 'PPCOverlay';
+        elseif hasPPC
+            yyaxis(ax(b),'left');
+        end
+        plot(ax(b),R.freq(freqMask),reshape(meanFC(5,b,freqMask),1,[]), ...
+            'Color',runColors(runIdx,:),'LineStyle',R.lineStyle,'LineWidth',curveWidth,'Marker','none', ...
+            'DisplayName',curveLabel, ...
+            'Tag',curveTag,'UserData',struct('label',R.label,'metric',R.metric,'folder',R.folder));
+    end
+    if hasPPC
+        yyaxis(ax(b),'right');
+        ylabel(ax(b),'Seed-averaged PPC');
+        ax(b).YAxis(2).Color = [0 0 0];
+        if ~isempty(ppcYLimits), ylim(ax(b),ppcYLimits); end
+    end
+    if hasPPC, yyaxis(ax(b),'left'); end
+    ax(b).YAxis(1).Color = [0 0 0];
+    gcAutoLimits(b,:) = ylim(ax(b));
+    title(ax(b),binNames{b}); grid(ax(b),gridSetting);
+    xlabel(ax(b),'Frequency (Hz)'); ylabel(ax(b),'Seed-averaged outgoing GC');
+    legend(ax(b),'show','Location','best','Interpreter','none','FontSize',8);
+end
+% Link frequency only so PPC keeps an independent right-hand scale per bin.
+% Preserve the original common GC scale across all six left-hand axes.
+linkaxes(ax,'x');
+if isempty(yLimits), yLimits = [min(gcAutoLimits(:,1)) max(gcAutoLimits(:,2))]; end
+for b = 1:6
+    if hasPPC, yyaxis(ax(b),'left'); end
+    ylim(ax(b),yLimits);
+end
+if ~isempty(xLimits), xlim(ax(1),xLimits); end
+title(tl,sprintf('%s | %s | %s | Fs=%g Hz, p=%d | line noise removed', ...
+    protocol,modeLabel,epochChoice,sampleRate,mvarOrder),'Interpreter','none');
+end
+
+function showMessage(tab,msg)
+% Empty-tab placeholder when no estimator has data for this protocol/mode.
+ax = axes('Parent',tab,'Visible','off','Position',[0 0 1 1]);
+text(ax,0.5,0.5,msg,'Units','normalized','HorizontalAlignment','center', ...
+    'FontSize',12,'Interpreter','none');
+end
+
+function tests = findBioSigComparisonRuns(root,selectedOptions,sampleRate,order,maxFrequency)
+tests = struct('folder',{},'algorithm',{});
+entries = dir(root);
+for k=1:numel(entries)
+    if ~entries(k).isdir, continue; end
+    token = regexp(entries(k).name, ...
+        '^biosig(?<algorithm>\d+)_fs(?<fs>[0-9.eE+-]+)Hz_p(?<p>\d+)_fmax(?<fmax>[0-9.eE+-]+)Hz_withoutLineNoise_keeptrials_no$', ...
+        'names','once');
+    if isempty(token), continue; end
+    algorithm = str2double(token.algorithm);
+    if algorithm==8 || (~isempty(selectedOptions) && ~ismember(algorithm,selectedOptions)), continue; end
+    if str2double(token.fs)~=sampleRate || str2double(token.p)~=order || str2double(token.fmax)~=maxFrequency
+        continue
+    end
+    tests(end+1) = struct('folder',fullfile(root,entries(k).name),'algorithm',algorithm); %#ok<AGROW>
+end
+[~,index] = sort([tests.algorithm]);
+tests = tests(index);
+end

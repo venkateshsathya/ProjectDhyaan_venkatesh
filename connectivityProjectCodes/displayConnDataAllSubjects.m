@@ -69,6 +69,11 @@ saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectD
 saveFolderName = '/media/venkatesh/3cb61805-2382-46a6-8b40-24cab80d1e2d/ProjectDhyaan/BK1/savedata_2026-10-14_19-47-11';
 saveFolderName = '/run/media/venkatesh/Data1/data/BivariateGranger_LineNoiseRemoved';
 saveFolderName = '/run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th';
+saveFolderName = '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_2026-10-23_20-55-34/200Hz_withoutLineNoise_keeptrials_no';
+saveFolderName = '/home/venkatesh/Documents/IISc/data/200_500_parametric_biosmart_WithAndwithoutLineNoise/200Hz_withoutLineNoise_keeptrials_no';
+saveFolderName = '/home/venkatesh/Documents/IISc/data/100HzMaxFreq_Bsmart_RepeatRunByMistake';
+savefolderName = '/home/venkatesh/Documents/IISc/data/savedata_parametric_fast_biosig12_2026-11-05_18-37-24/biosig2_fs200Hz_p20_fmax100Hz_withoutLineNoise_keeptrials_no';
+% savefolderName = '/home/venkatesh/Documents/IISc/data/100HzMaxFreq_Bsmart_RepeatRunByMistake';
 % /run/media/venkatesh/Data1/data/Bivariate_Granger_GoodElectrodeUsedOnly_Nonparametric_Nonconditional_Oct9th
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
